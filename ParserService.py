@@ -5,6 +5,8 @@ import sys
 
 #Cliente UDP 
 
+
+
 class Main:
 
     def __init__(self):
@@ -24,6 +26,9 @@ class Main:
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.sendto(bytearray(coding,"utf-8"),("localhost",port))
         
+        (data, addr) = s.recvfrom(128*1024)    #Veo mensaje recibido desde server
+        print("Mensaje Recibido :"+data)       #Imprimo mensaje recibido 
+       
         #while True:
             #(data, addr) = s.recvfrom(128*1024)
             #data = Parser.parseData(data)
