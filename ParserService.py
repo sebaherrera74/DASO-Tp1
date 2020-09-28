@@ -23,14 +23,14 @@ class Csv:
         with open(self.get_csv_name(),newline='') as File:
             reader = csv.reader(File)
             for row in reader:
-                elemento={"id":row[0],"nombre":row[1],"value1":(row[2]),"value2":row[3]}
+                elemento={"id":row[0],"name":row[1],"value1":(row[2]),"value2":row[3]}
                 #print(elemento)
                 lista.append(elemento)
                 #print(lista)
-                lista.pop(0) #elimino el primer elemento de la lista 
-                print(lista)
-                #jsonData = json.dumps(lista)
-                #print(jsonData)
+            lista.pop(0) #elimino el primer elemento de la lista 
+            #print(lista)
+            return json.dumps(lista) #retorna la lista ya convertida en string
+            
 
 
 
@@ -53,27 +53,34 @@ class Main:
         port = 10000
         server_address=("localhost",port)
         print('conectado a {}, puerto {}'.format(server_address[0],server_address[1]))
+        
         try:
             port = int(sys.argv[1])
         except:
-            print("Puerto incorrecto")
+            print("Puerto incorrecto") # olocar otro mensaje de exepcion
             exit(1)
-        #Hardcodeo para probar 
-        #data=[{'id': '1', 'name': 'Dolar', 'value1': '58.63', 'value2': '61.61'}, {'id': '2', 'name': 'Euro', 'value1': '65.12', 'value2': '68.93'}, {'id': '3', 'name': 'Real', 'value1': '13.45', 'value2': '14.23'}]
-
-        #while True:
-
-            #coding=json.dumps(data)
-            #print(coding)
-            #s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            #s.sendto(bytearray(coding,"utf-8"),server_address)
+        archivo_csv=self.get_file_csv()    #Obtengo el archivo de acuerdo a requerimiento "El programa leerá la ruta del archivo CSV desde un archivo config.txt"
+        print(archivo_csv) 
+       
+        #creo objeto CSV 
+        obj_csv=Csv(archivo_csv)
+        #print(type(obj_csv))
+        #print(obj_csv.get_csv_name())
+        
+        while True:
+            #Obtengo el dato en formato jason 
+            data_json=obj_csv.leer_csv()
+            print(data_json)
             
-            #(data, addr) = s.recvfrom(128*1024)    #Veo mensaje recibido desde server
-            #print("Mensaje Recibido :"+str(data))       #Imprimo mensaje recibido                         
+            #creo socket para enviar a PizarraService
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.sendto(bytearray(data_json,"utf-8"),server_address)
+            
+            #espero nuevamente 30 segndos para volver a leer los valores
+            time.sleep(10)
 
+        
 
-
-
-print("hola")
+#print("hola")
 m=Main('config.txt')
 m.main()
