@@ -4,6 +4,8 @@ import os
 import socket
 import sys
 import time
+import traceback
+import signal  
 
 #Cliente UDP 
 
@@ -49,7 +51,20 @@ class Main:
             texto=f.read()
         return texto.strip() #Saco espacios en blanco del archivo, solo mando el .csv
 
+    def cerrar_socket(self):
+        print("Sale del  programa ")
+        s.close()
+
+    def handler(self,sig, frame):  # define the handler  
+        print("Signal Number:", sig, " Frame: ", frame)  
+        traceback.print_stack(frame)	
+        self.cerrar_socket()
+        
+        
     def main(self):
+      
+        signal.signal(signal.SIGINT, self.handler)  #requerimiento de signal
+     
         port = 10000
         server_address=("localhost",port)
         print('conectado a {}, puerto {}'.format(server_address[0],server_address[1]))
@@ -59,6 +74,7 @@ class Main:
         except:
             print("Puerto incorrecto") # olocar otro mensaje de exepcion
             exit(1)
+
         archivo_csv=self.get_file_csv()    #Obtengo el archivo de acuerdo a requerimiento "El programa leerá la ruta del archivo CSV desde un archivo config.txt"
         print(archivo_csv) 
        
@@ -68,19 +84,26 @@ class Main:
         #print(obj_csv.get_csv_name())
         
         while True:
-            #Obtengo el dato en formato jason 
-            data_json=obj_csv.leer_csv()
-            print(data_json)
+            try:
+                #Obtengo el dato en formato jason 
+                data_json=obj_csv.leer_csv()
+                print(data_json)
+                
+                #creo socket para enviar a PizarraService
+                s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                s.sendto(bytearray(data_json,"utf-8"),server_address)
+                
+                #espero nuevamente 30 segndos para volver a leer los valores
+                time.sleep(10)
+                #requerimiento "Se deberá leer el archivo y enviar los datos cada 30 segundos"
             
-            #creo socket para enviar a PizarraService
-            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            s.sendto(bytearray(data_json,"utf-8"),server_address)
+            except:
+                print('cerrando socket..')
+                break             
             
-            #espero nuevamente 30 segndos para volver a leer los valores
-            time.sleep(10)
 
         
 
 #print("hola")
-m=Main('config.txt')
+m=Main('config.txt') #requerimiento "El programa leerá la ruta del archivo CSV desde un archivo config.txt"
 m.main()
